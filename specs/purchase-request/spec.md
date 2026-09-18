@@ -3,13 +3,13 @@
 **Feature Branch**: `001-purchase-request`
 **Created**: 2026-09-15
 **Status**: Draft
-**Input**: User description: "Purchase request creation, submission, lifecycle management, and duplicate detection for a gym procurement system"
+**Input**: User description: "Purchase request creation, submission, lifecycle management, and duplicate detection for a multi-tenant SaaS POS procurement system"
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Create and Submit Purchase Requests (Priority: P1)
 
-As a gym department coordinator, I want to create purchase requests with line items, link them to a budget category, and submit them for approval, so that procurement needs are formally documented and routed for review.
+As a department coordinator, I want to create purchase requests with line items, link them to a budget category, and submit them for approval, so that procurement needs are formally documented and routed for review.
 
 **Why this priority**: Foundational entry point for all procurement activity. Delivers viable MVP for tracking procurement intent.
 
@@ -127,6 +127,7 @@ As a procurement officer, I want to convert an approved PR into a PO linked to a
 
 ## Assumptions
 
+- Multi-tenant SaaS: each organization has isolated data via `organization_id` on all tables.
 - Branch/department data exists (managed separately).
 - Budget categories/lines managed by financial engine.
 - Approval workflows configured separately.

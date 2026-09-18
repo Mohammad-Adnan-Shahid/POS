@@ -119,6 +119,7 @@ As an approver, I want to resume a held PR after the hold reason is resolved, so
 - **Approval Workflow Step**: step_order, role_id, user_id, max_amount.
 - **Approval Workflow Rule**: min_amount, max_amount, category, branch_id, department_id.
 - **Approval History**: entity_type, entity_id, approver_id, action, comments, financial_snapshot, exception_reason.
+- **Notification**: user_id, type, entity_type, entity_id, message, read, created_at. In-app notifications for PR creators on approval decisions (approve, reject, hold, exception).
 
 ## Success Criteria *(mandatory)*
 
@@ -131,6 +132,7 @@ As an approver, I want to resume a held PR after the hold reason is resolved, so
 
 ## Assumptions
 
+- Multi-tenant SaaS: each organization has isolated workflows and data via `organization_id`.
 - Roles/permissions managed by RBAC module.
 - Financial engine provides real-time available funds.
 - PR lifecycle handled by purchase-request feature.

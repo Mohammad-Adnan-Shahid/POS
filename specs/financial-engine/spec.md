@@ -120,6 +120,7 @@ As an org owner, I want a dashboard showing current funds, commitments, obligati
 
 ### Key Entities
 
+- **Current Fund**: organization_id, amount, reason, created_by, created_at. Stores manually entered current funds per organization. Every update requires a mandatory reason and is audit-logged.
 - **Financial Commitment**: entity_type, entity_id, amount, released_amount, remaining_amount, status.
 - **Budget**: name, status, period, organization_id.
 - **Budget Line**: category, allocated, used, committed, remaining.
@@ -136,6 +137,7 @@ As an org owner, I want a dashboard showing current funds, commitments, obligati
 
 ## Assumptions
 
+- Multi-tenant SaaS: each organization has isolated financial data via `organization_id`.
 - Current funds manually entered (bank feed = future scope).
 - Upcoming obligations and pending payments modules not yet built; return 0 until implemented.
 - Budget categories/lines created by finance managers before PRs reference them.
