@@ -4,9 +4,9 @@
 
 ## Scope
 Backend-only gap closure for three spec features:
-- `specs/purchase-request/spec.md`
-- `specs/approval-workflow/spec.md`
-- `specs/financial-engine/spec.md`
+- `specs/001-purchase-request/spec.md`
+- `specs/002-approval-workflow/spec.md`
+- `specs/003-financial-engine/spec.md`
 
 Focus: What's MISSING from the existing implementation. Organized by priority (P1 → P2 → P3).
 

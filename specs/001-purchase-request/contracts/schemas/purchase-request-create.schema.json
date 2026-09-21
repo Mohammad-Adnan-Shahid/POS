@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PurchaseRequestCreate",
+  "type": "object",
+  "required": ["branch_id", "department_id", "category", "items"],
+  "properties": {
+    "branch_id": { "type": "string", "format": "uuid" },
+    "department_id": { "type": "string", "format": "uuid" },
+    "category": { "type": "string", "minLength": 1, "maxLength": 50 },
+    "priority": { "type": "string", "enum": ["low", "normal", "high", "urgent"] },
+    "justification": { "type": "string" },
+    "required_by_date": { "type": "string", "format": "date" },
+    "budget_category_id": { "type": "string", "format": "uuid" },
+    "preferred_supplier_id": { "type": "string", "format": "uuid" },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/PurchaseRequestItemCreate" }
+    }
+  },
+  "$defs": {
+    "PurchaseRequestItemCreate": {
+      "type": "object",
+      "required": ["description", "quantity", "unit_price"],
+      "properties": {
+        "description": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "quantity": { "type": "number", "exclusiveMinimum": 0 },
+        "unit_price": { "type": "number", "minimum": 0 },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

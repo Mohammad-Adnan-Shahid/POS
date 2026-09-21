@@ -15,9 +15,9 @@ POS is a multi-tenant SaaS procurement system defined by three feature specifica
 
 | Spec | Scope |
 |---|---|
-| `specs/purchase-request/spec.md` | Purchase request creation, submission, lifecycle management, duplicate detection |
-| `specs/approval-workflow/spec.md` | Configurable multi-step approval workflow with SoD, authority limits, and financial validation |
-| `specs/financial-engine/spec.md` | Real-time available funds calculation, commitment tracking, budget validation, and risk assessment |
+| `specs/001-purchase-request/spec.md` | Purchase request creation, submission, lifecycle management, duplicate detection |
+| `specs/002-approval-workflow/spec.md` | Configurable multi-step approval workflow with SoD, authority limits, and financial validation |
+| `specs/003-financial-engine/spec.md` | Real-time available funds calculation, commitment tracking, budget validation, and risk assessment |
 
 **Core principles (from all three specs):**
 

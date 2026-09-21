@@ -89,7 +89,7 @@ Response 403:
 
 As a finance manager, I want duplicate PRs detected at submission, so unintentional duplicate spending is prevented.
 
-**Why this priority**: Critical control alongside P1.
+**Why this priority**: Critical control alongside P1 — prevents accidental double-spending on the same category.
 
 **Independent Test**: Create two PRs in same category with similar totals (within 10%), verify second is flagged.
 
@@ -105,6 +105,8 @@ As a finance manager, I want duplicate PRs detected at submission, so unintentio
 
 As a department manager, I want to view all PRs with status filtering, so I can monitor procurement activity.
 
+**Why this priority**: Enables monitoring and oversight; depends on PRs existing (P1).
+
 **Independent Test**: Create PRs in different statuses, verify filtered lists work correctly.
 
 **Acceptance Scenarios**:
@@ -118,6 +120,8 @@ As a department manager, I want to view all PRs with status filtering, so I can 
 ### User Story 5 - Convert Approved PR to Purchase Order (Priority: P3)
 
 As a procurement officer, I want to convert an approved PR into a PO linked to a supplier, so formal procurement begins.
+
+**Why this priority**: Downstream of full approval lifecycle; only valuable once approvals are complete.
 
 **Independent Test**: Approve PR through all steps, create PO, verify linkage.
 

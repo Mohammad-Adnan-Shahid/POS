@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CommitmentRelease",
+  "type": "object",
+  "required": ["amount", "reason"],
+  "properties": {
+    "amount": { "type": "number", "exclusiveMinimum": 0, "description": "Full or partial release (FR-004)" },
+    "reason": { "type": "string", "minLength": 1, "description": "Audit required (FR-013)" }
+  },
+  "additionalProperties": false
+}

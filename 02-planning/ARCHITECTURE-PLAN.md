@@ -2,7 +2,7 @@
 
 ## POS — Multi-Tenant Procurement & Financial Controls (SaaS)
 
-> Scope: specs/purchase-request, specs/approval-workflow, specs/financial-engine. Canonical plan: SOFTWARE-PLANNING.md.
+> Scope: specs/001-purchase-request, specs/002-approval-workflow, specs/003-financial-engine. Canonical plan: SOFTWARE-PLANNING.md.
 
 ---
 

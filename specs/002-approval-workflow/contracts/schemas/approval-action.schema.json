@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ApprovalAction",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "comments": { "type": "string" },
+    "reason": { "type": "string" },
+    "exception_reason": { "type": "string", "description": "Mandatory for approve_with_exception (FR-005)" },
+    "financial_snapshot": { "type": "object", "additionalProperties": true },
+    "version": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": false
+}

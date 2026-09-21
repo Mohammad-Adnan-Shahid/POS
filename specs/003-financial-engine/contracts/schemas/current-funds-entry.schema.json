@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CurrentFundsEntry",
+  "type": "object",
+  "required": ["amount", "reason"],
+  "properties": {
+    "amount": { "type": "number", "description": "Supports zero/negative (overdraft, spec edge cases)" },
+    "reason": { "type": "string", "minLength": 1, "description": "Mandatory reason (FR-012)" }
+  },
+  "additionalProperties": false
+}

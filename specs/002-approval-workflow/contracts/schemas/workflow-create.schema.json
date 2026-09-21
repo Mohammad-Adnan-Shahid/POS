@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WorkflowCreate",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "description": { "type": "string" },
+    "is_active": { "type": "boolean", "default": true }
+  },
+  "additionalProperties": false
+}
