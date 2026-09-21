@@ -39,6 +39,49 @@ As a coordinator who submitted a PR, I want to recall it to draft before any app
 1. **Given** a PR is "submitted" and no approvals processed, **When** creator recalls, **Then** status returns to "draft" and items are editable.
 2. **Given** a PR is "under_review", **When** anyone recalls, **Then** recall is rejected.
 3. **Given** a PR is recalled, **When** resubmitted, **Then** it re-enters approval with fresh audit trail.
+4. **Given** a PR is "submitted" and non-creator attempts recall, **When** recall is attempted, **Then** 403 Forbidden is returned.
+5. **Given** a PR is already "draft", **When** creator attempts recall, **Then** 400 "Already in draft" is returned.
+6. **Given** a PR is "submitted" and ApprovalHistory records exist, **When** creator recalls, **Then** recall is blocked — approval already started.
+
+**Business Rules**:
+
+- **BR-01**: Only the PR creator can recall (not manager, not admin).
+- **BR-02**: Only "submitted" status PRs can be recalled.
+- **BR-03**: If ANY ApprovalHistory record exists → block recall.
+- **BR-04**: Recall logs audit event: "submitted → draft" with timestamp.
+- **BR-05**: After recall, PR items become editable again.
+- **BR-06**: Resubmitting after recall starts fresh approval trail.
+
+**Edge Cases**:
+
+- Two users recall same PR simultaneously → second gets conflict error (optimistic locking).
+- PR status changes during recall attempt → reject with current status message.
+- Recall after partial approval → blocked — ApprovalHistory exists.
+- Creator left the company → no one can recall (only creator can).
+
+**API Design**:
+
+```
+POST /api/purchase-requests/{pr_id}/recall
+
+Response 200:
+{
+  "id": "uuid",
+  "request_number": "PR-000001",
+  "status": "draft",
+  "message": "Recalled to draft successfully"
+}
+
+Response 400:
+{
+  "detail": "Only submitted requests can be recalled"
+}
+
+Response 403:
+{
+  "detail": "Only the creator can recall this request"
+}
+```
 
 ---
 
@@ -86,6 +129,63 @@ As a procurement officer, I want to convert an approved PR into a PO linked to a
 
 ---
 
+### User Story 6 - Edit Draft Purchase Request (Priority: P2)
+
+As a department coordinator, I want to edit my draft PR's header fields and line items, so I can fix mistakes and update requirements before submission.
+
+**Why this priority**: PR banate waqt galti hona common hai. Items add/remove karna zaroori hai. Bina edit ke har baar naya PR banana padega = data pollution.
+
+**Independent Test**: Create draft PR, update header, add/update/delete items, verify totals recalculate correctly.
+
+**Acceptance Scenarios**:
+
+1. **Given** a PR is in "draft", **When** creator updates header fields (category, priority, justification, budget_category, required_by_date), **Then** fields updated and version incremented.
+2. **Given** a PR is in "draft", **When** creator adds new item, **Then** item added and PR total recalculated.
+3. **Given** a PR is in "draft", **When** creator updates existing item (quantity, unit_price, description), **Then** item updated and PR total recalculated.
+4. **Given** a PR is in "draft", **When** creator deletes item, **Then** item removed and PR total recalculated.
+5. **Given** a PR is "submitted", **When** anyone attempts edit, **Then** 400 "Only draft requests can be edited".
+6. **Given** a PR is in "draft", **When** two users edit simultaneously and second saves, **Then** version conflict error (409).
+7. **Given** a PR has 1 item, **When** creator deletes last item, **Then** allowed (but submission will fail — min 1 item validation).
+8. **Given** a PR is in "draft", **When** creator updates budget_category_id, **Then** updated and linked to financial validation.
+
+**Business Rules**:
+
+- **BR-01**: Only "draft" status PRs can be edited.
+- **BR-02**: Only the PR creator can edit.
+- **BR-03**: Optimistic locking via `version` field — check before write, increment on success.
+- **BR-04**: Every item change must recalculate `total_price` (qty × unit_price).
+- **BR-05**: Every item mutation must recalculate PR total (sum of all items).
+- **BR-06**: Header updates and item updates are separate endpoints.
+- **BR-07**: Item deletion with zero items allowed (submission will block separately via FR-003).
+
+**Edge Cases**:
+
+- Edit submitted PR → 400 "Only draft requests can be edited".
+- Concurrent edit → version conflict 409.
+- Delete last item → allowed (submission blocks separately).
+- Update all fields → version increments correctly.
+
+**API Design**:
+
+```
+PUT /api/purchase-requests/{pr_id}
+Body: { "category": "office_supplies", "priority": "urgent", "justification": "Updated", "budget_category_id": "uuid", "required_by_date": "2026-10-01" }
+Response 200: Updated PR object
+Response 400: "Only draft requests can be edited"
+Response 409: "Version conflict — PR was modified by another user"
+
+POST /api/purchase-requests/{pr_id}/items
+Body: { "description": "Office chairs", "quantity": 10, "unit_price": 5000, "notes": "Ergonomic" }
+Response 201: Created item with total_price
+
+PUT /api/purchase-requests/{pr_id}/items/{item_id}
+Body: { "quantity": 15, "unit_price": 4500 }
+Response 200: Updated item with recalculated total_price
+
+DELETE /api/purchase-requests/{pr_id}/items/{item_id}
+Response 200: { "message": "Item deleted" }
+```
+
 ### Edge Cases
 
 - PR with zero items: submission rejected (min 1 item).
@@ -93,6 +193,10 @@ As a procurement officer, I want to convert an approved PR into a PO linked to a
 - Budget category deactivated before approval: validation catches and rejects.
 - Two users simultaneously submit same PR: optimistic locking via version field.
 - Recall attempted while approval in progress: blocked.
+- Edit submitted PR → 400 "Only draft requests can be edited".
+- Concurrent edit → version conflict 409.
+- Delete last item → allowed (submission blocks separately).
+- Update all fields → version increments correctly.
 
 ## Requirements *(mandatory)*
 
@@ -106,6 +210,9 @@ As a procurement officer, I want to convert an approved PR into a PO linked to a
 - **FR-006**: System MUST block submission on duplicate detection (same category, amount within 10%).
 - **FR-007**: System MUST allow recall to draft only when "submitted" and no approvals processed.
 - **FR-008**: System MUST prevent item editing after submission (except via recall).
+- **FR-008a**: System MUST allow draft PR header updates (category, priority, justification, budget_category, required_by_date).
+- **FR-008b**: System MUST allow draft PR item add/update/delete with total recalculation.
+- **FR-008c**: System MUST enforce optimistic locking on all draft edits via version field.
 - **FR-009**: System MUST log all state transitions with user, timestamp, context.
 - **FR-010**: System MUST support filtering PRs by status with pagination.
 - **FR-011**: System MUST create financial commitment on full approval.
@@ -124,6 +231,8 @@ As a procurement officer, I want to convert an approved PR into a PO linked to a
 - **SC-003**: PR recall (pre-approval) completes in under 10 seconds with audit trail.
 - **SC-004**: 100% of submitted PRs have linked budget category.
 - **SC-005**: PR list with filter loads in under 2 seconds (1,000 PRs).
+- **SC-006**: Draft PR edit (header + item changes) completes in under 2 seconds.
+- **SC-007**: Concurrent edit conflict detected 100% of the time via version field.
 
 ## Assumptions
 
