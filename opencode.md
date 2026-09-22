@@ -13,18 +13,18 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD) for
 ## Project context
 
 - **Product**: POS — Multi-Tenant Procurement & Financial Controls (SaaS). Derived strictly from the three specs; NOT German Gym.
-- **Constitution**: `.specify/memory/constitution.md` — non-negotiable principles (tenant isolation, test-first, integration-first, structural simplicity, audit compliance, no silent deletion, financial integrity).
-- **Features**: `specs/001-purchase-request/`, `specs/002-approval-workflow/`, `specs/003-financial-engine/` — each with spec/plan/research/data-model/contracts/tasks/quickstart.
+- **Constitution**: `spec-kit-plus/memory/constitution.md` — non-negotiable principles (tenant isolation, test-first, integration-first, structural simplicity, audit compliance, no silent deletion, financial integrity).
+- **Features**: `spec-kit-plus/specs/001-purchase-request/`, `spec-kit-plus/specs/002-approval-workflow/`, `spec-kit-plus/specs/003-financial-engine/` — each with spec/plan/research/data-model/contracts/tasks/quickstart.
 - **Stack**: Python 3.11, FastAPI, async SQLAlchemy 2.0 + PostgreSQL 16, Pydantic v2, React SPA, pytest + pytest-asyncio.
-- **Gap closure**: `02-planning/SPEC-GAPS-PLAN.md` (tasks P1.1–P3.3) is the source of remaining implementation work; feature `tasks.md` files carry the per-story breakdown.
+- **Gap closure**: feature `tasks.md` files carry the per-story breakdown (source of remaining implementation work).
 
 ## Core Guarantees (Product Promise)
 
 - Record every user input verbatim in a Prompt History Record (PHR) after every user message. Do not truncate; preserve full multiline input.
-- PHR routing (all under `history/prompts/`):
-  - Constitution → `history/prompts/constitution/`
-  - Feature-specific → `history/prompts/<feature-name>/` (e.g., `001-purchase-request`)
-  - General → `history/prompts/general/`
+- PHR routing (all under `spec-kit-plus/`):
+  - Constitution → `spec-kit-plus/memory/prompts/constitution/`
+  - Feature-specific → `spec-kit-plus/specs/<feature-name>/prompts/` (e.g., `001-purchase-request`)
+  - General → `spec-kit-plus/memory/prompts/general/`
 - ADR suggestions: when an architecturally significant decision is detected, suggest: "Architectural decision detected: <brief>. Document? Run `/sp.adr <title>`." Never auto-create ADRs; require user consent.
 
 ## Development Guidelines
@@ -36,7 +36,7 @@ Prioritize MCP tools and CLI commands for all information gathering and task exe
 Treat MCP servers as first-class tools for discovery, verification, execution, and state capture. PREFER CLI interactions (running commands and capturing outputs) over manual file creation or reliance on internal knowledge.
 
 ### 3. Knowledge Capture (PHR) for Every User Input
-After completing requests, you MUST create a PHR under `history/prompts/`. Detect stage (constitution | spec | plan | tasks | red | green | refactor | explainer | misc | general), generate a 3–7 word slug title, read `.specify/templates/phr-template.prompt.md`, allocate an incrementing ID, write the completed file with full PROMPT_TEXT verbatim, and fill all placeholders (ID, TITLE, STAGE, DATE_ISO, SURFACE, MODEL, FEATURE, BRANCH, COMMAND, LABELS, LINKS, FILES_YAML, TESTS_YAML). Confirm absolute path. On failure: warn, don't block. Skip only for `/sp.phr`.
+After completing requests, you MUST create a PHR following the routing in Core Guarantees. Detect stage (constitution | spec | plan | tasks | red | green | refactor | explainer | misc | general), generate a 3–7 word slug title, read `spec-kit-plus/templates/phr-template.prompt.md`, allocate an incrementing ID, write the completed file with full PROMPT_TEXT verbatim, and fill all placeholders (ID, TITLE, STAGE, DATE_ISO, SURFACE, MODEL, FEATURE, BRANCH, COMMAND, LABELS, LINKS, FILES_YAML, TESTS_YAML). Confirm absolute path. On failure: warn, don't block. Skip only for `/sp.phr`.
 
 ### 4. Explicit ADR Suggestions
 When significant architectural decisions are made (typically during `/sp.plan` and sometimes `/sp.tasks`), run the three-part test (impact, alternatives, scope) and suggest documenting with an ADR. Wait for user consent; never auto-create the ADR.
@@ -59,20 +59,19 @@ Invoke the user for input when you encounter ambiguous requirements, unforeseen 
 2) List constraints, invariants, non-goals.
 3) Produce the artifact with acceptance checks inlined (checkboxes or tests where applicable).
 4) Add follow-ups and risks (max 3 bullets).
-5) Create PHR in the appropriate subdirectory under `history/prompts/`.
+5) Create PHR in the appropriate subdirectory under `spec-kit-plus/specs/<feature>/prompts/` (feature) or `spec-kit-plus/memory/prompts/` (constitution/general).
 6) If plan/tasks identified significant decisions, surface the ADR suggestion text as described.
 
 ## Basic Project Structure
 
-- `.specify/memory/constitution.md` — Project principles
-- `specs/<feature>/spec.md` — Feature requirements
-- `specs/<feature>/plan.md` — Architecture decisions
-- `specs/<feature>/tasks.md` — Testable tasks with cases
-- `history/prompts/` — Prompt History Records
-- `history/adr/` — Architecture Decision Records
-- `checklists/requirements.md` — Quality gates before plan/implement
-- `.specify/` — SpecKit Plus templates and scripts
+- `spec-kit-plus/memory/constitution.md` — Project principles
+- `spec-kit-plus/specs/<feature>/spec.md` — Feature requirements
+- `spec-kit-plus/specs/<feature>/plan.md` — Architecture decisions
+- `spec-kit-plus/specs/<feature>/tasks.md` — Testable tasks with cases
+- `spec-kit-plus/specs/<feature>/prompts/` — Feature Prompt History Records
+- `spec-kit-plus/memory/prompts/` — Constitution & general Prompt History Records
+- `spec-kit-plus/templates/` — SpecKit Plus templates and scripts
 
 ## Code Standards
 
-See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+See `spec-kit-plus/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
