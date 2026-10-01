@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Vite build output
+dist/
+dist-ssr/
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment (none used yet — the mock keeps all data in localStorage)
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.suo
+*.sw?
+
+# Vercel CLI
+.vercel/
