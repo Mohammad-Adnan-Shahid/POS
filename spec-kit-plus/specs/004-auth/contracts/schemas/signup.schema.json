@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AuthSignupRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["organization_name", "name", "email", "password"],
+  "properties": {
+    "organization_name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 200
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "maxLength": 320
+    },
+    "password": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "pattern": "^(?=.*[A-Za-z])(?=.*\\d).+$"
+    }
+  }
+}
