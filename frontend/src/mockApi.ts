@@ -413,6 +413,45 @@ export async function me(token: string): Promise<{ user: User; organization: { i
   return { user, organization: { id: user.organization_id, name: 'Demo Org' } }
 }
 
+// ── 005-roles: super-admin assignments ────────────────────────────────────
+/** All users for the super-admin assignment screen (roles.md §5). */
+export async function listAssignables(token: string): Promise<Pick<User, 'id' | 'name' | 'email' | 'role' | 'permissions' | 'is_active'>[]> {
+  await wait(LATENCY)
+  const actor = requireUser(token)
+  requirePermission(actor, 'user.manage')
+  return load().users.map((u) => ({ id: u.id, name: u.name, email: u.email, role: u.role, permissions: [...u.permissions], is_active: u.is_active }))
+}
+
+/**
+ * Grant/revoke `purchase_request.create` on a named user (roles.md §5, ADR §5.1 Option A:
+ * the grant lives in `user.permissions[]`). Only the super admin may call this.
+ * Note: the target user's session holds a permissions snapshot — they see the change
+ * on their next login/session restore (auth-context.md §7.3).
+ */
+export async function setCreateGrant(token: string, userId: string, granted: boolean): Promise<Pick<User, 'id' | 'permissions'>> {
+  await wait(LATENCY)
+  const actor = requireUser(token)
+  requirePermission(actor, 'user.manage')
+  const db = load()
+  const target = db.users.find((u) => u.id === userId)
+  if (!target) throw makeError(404, 'NOT_FOUND', 'User not found')
+  if (target.id === actor.id) throw makeError(400, 'VALIDATION_ERROR', 'You cannot change your own creation grant')
+  const PERM = 'purchase_request.create'
+  const has = target.permissions.includes('*') || target.permissions.includes(PERM)
+  if (granted === has) {
+    throw makeError(400, 'VALIDATION_ERROR', granted ? 'User already has a creation grant' : 'User has no creation grant to revoke')
+  }
+  target.permissions = granted
+    ? [...target.permissions, PERM]
+    : target.permissions.filter((p) => p !== PERM)
+  audit(db, actor, granted ? 'role.create_granted' : 'role.create_revoked', 'user', target.id, {
+    permission: PERM,
+    target_name: target.name,
+  })
+  save(db)
+  return { id: target.id, permissions: [...target.permissions] }
+}
+
 // ── 001-purchase-request ──────────────────────────────────────────────────
 export interface PRInput {
   branch_id: string
@@ -910,6 +949,57 @@ export async function addWorkflowStep(
   })
   wf.steps.sort((a, b) => a.step_order - b.step_order)
   audit(db, user, 'approval.workflow_step_added', 'workflow', wf.id, { step_order: step.step_order })
+  save(db)
+  return wf
+}
+
+/** Update a step's assignee/authority limit (002 api-spec: PUT /workflows/{id}/steps/{stepId}). */
+export async function updateWorkflowStep(
+  token: string,
+  workflowId: string,
+  stepId: string,
+  patch: { role_id?: RoleName | null; user_id?: string | null; max_amount?: number | null },
+): Promise<ApprovalWorkflow> {
+  await wait(LATENCY)
+  const db = load()
+  const user = requireUser(token)
+  requirePermission(user, 'approval.configure_workflow')
+  const wf = db.workflows.find((w) => w.id === workflowId)
+  if (!wf) throw makeError(404, 'NOT_FOUND', 'Workflow not found')
+  const step = wf.steps.find((s) => s.id === stepId)
+  if (!step) throw makeError(404, 'NOT_FOUND', 'Step not found')
+  if (patch.user_id !== undefined || patch.role_id !== undefined) {
+    const userId = patch.user_id !== undefined ? patch.user_id : step.user_id
+    const roleId = patch.role_id !== undefined ? patch.role_id : step.role_id
+    if (!userId && !roleId) {
+      throw makeError(400, 'VALIDATION_ERROR', 'Assign the step to an approver role or a specific approver')
+    }
+    if (userId && !db.users.some((u) => u.id === userId)) {
+      throw makeError(400, 'VALIDATION_ERROR', 'Unknown approver')
+    }
+    // Exactly one of role_id / user_id (002 data-model) — a specific user wins.
+    step.user_id = userId ?? null
+    step.role_id = userId ? null : roleId
+  }
+  if (patch.max_amount !== undefined) step.max_amount = patch.max_amount
+  audit(db, user, 'approval.workflow_step_updated', 'workflow', wf.id, { step_id: stepId })
+  save(db)
+  return wf
+}
+
+/** Delete a step; remaining steps re-index (002 api-spec: DELETE /workflows/{id}/steps/{stepId}). */
+export async function deleteWorkflowStep(token: string, workflowId: string, stepId: string): Promise<ApprovalWorkflow> {
+  await wait(LATENCY)
+  const db = load()
+  const user = requireUser(token)
+  requirePermission(user, 'approval.configure_workflow')
+  const wf = db.workflows.find((w) => w.id === workflowId)
+  if (!wf) throw makeError(404, 'NOT_FOUND', 'Workflow not found')
+  const step = wf.steps.find((s) => s.id === stepId)
+  if (!step) throw makeError(404, 'NOT_FOUND', 'Step not found')
+  wf.steps = wf.steps.filter((s) => s.id !== stepId)
+  wf.steps.forEach((s, i) => (s.step_order = i + 1))
+  audit(db, user, 'approval.workflow_step_deleted', 'workflow', wf.id, { step_id: stepId })
   save(db)
   return wf
 }

@@ -15,6 +15,7 @@ import ApprovalsWorkflows from './pages/approvals/ApprovalsWorkflows'
 import FinancialDashboard from './pages/financial/FinancialDashboard'
 import FinancialBudgets from './pages/financial/FinancialBudgets'
 import AuditLog from './pages/AuditLog'
+import RoleAssignments from './pages/admin/RoleAssignments'
 import './styles.css'
 
 function Protected({ children }: { children: React.ReactNode }) {
@@ -48,6 +49,7 @@ function App() {
           <Route path="/financial" element={<Protected><FinancialDashboard /></Protected>} />
           <Route path="/financial/budgets" element={<Protected><FinancialBudgets /></Protected>} />
           <Route path="/audit" element={<Protected><AuditLog /></Protected>} />
+          <Route path="/roles" element={<Protected><RoleAssignments /></Protected>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>

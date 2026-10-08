@@ -77,13 +77,54 @@ The Login page has one-click fill buttons for each role:
   session, never from client input (FR-009/FR-010). Navigation is permission-filtered.
 
 ### Purchase Requests (001-purchase-request)
-- **`/purchase-requests`** — US4: status filter, newest-first, pagination.
-- **`/purchase-requests/new`** — US1: draft creation, auto request number `PR-0000xx`,
-  computed line totals; **submit blocks** without a budget category (FR-004) or ≥1 item (FR-003).
-- **`/purchase-requests/:id`** — US2/US6: edit draft (header + items, version increments),
-  submit (duplicate detection FR-006 → 409 with match scores), recall to draft
-  (creator-only, blocked if any approval exists), cancel (mandatory reason, releases the
-  commitment), convert approved → PO (US5, idempotent — the commitment already exists).
+
+A purchase request (PR) is the document a department fills out to ask for a purchase.
+It starts as a **draft**, goes through **approval**, and once approved can be turned
+into a purchase order.
+
+Status flow: `draft → submitted → under_review / on_hold → approved → purchase_ordered`,
+plus `rejected` and `cancelled`.
+
+- **`/purchase-requests` (list)** — shows every request in the org, newest first, 10 per
+  page, with a status dropdown (all 8 statuses). The "+ New Purchase Request" button only
+  appears for users with the create permission; clicking a row opens that request.
+
+- **`/purchase-requests/new` (create)** — a single form with two parts:
+  *Details* (category, priority low/normal/urgent, required-by date, budget category
+  picker that shows each line's remaining amount, and a justification) and *Line items*
+  (description, quantity, unit price → line total computed for you, add/remove rows,
+  live PR total at the bottom). Justification and required-by date are required to save.
+  Clicking "Create draft" saves it with an auto-generated number (`PR-` + a zero-padded
+  counter, e.g. `PR-000001`) and opens it. Branch and department are fixed demo values on
+  this screen.
+
+- **`/purchase-requests/:id` (detail)** — the whole life of one request:
+  - **Header + line items** with totals; items at price 0 get a "zero price" badge.
+  - **Edit draft** — creator only, and only while in draft: change header fields, add or
+    delete line items. Every save bumps the version shown in the header, so two people
+    editing the same draft can't silently overwrite each other.
+  - **Submit** — refused with an inline warning if there's no budget category linked
+    (FR-004) or no line items (FR-003). On submit, duplicate detection (FR-006) compares
+    the request against similar ones in the same category within 10%; if it matches you
+    get a 409 with a list of the matching request numbers, totals and match score %,
+    shown as a warning banner — there is no "submit anyway", so you have to change the
+    request (its total or category) until the overlap disappears.
+  - **Recall to draft** — only the creator, only from `submitted`, and blocked if any
+    approval decision already exists; putting it back in draft makes items editable again.
+  - **Cancel** — anyone with cancel permission, requires a reason (blank is rejected) and
+    releases any commitment the request had created.
+  - **Convert to PO** — enabled only when the request is `approved`; asks for a supplier
+    and is idempotent (running it twice doesn't double-count anything).
+  - **Financial Impact card** — current funds, commitments, available, projected position
+    after this PR (highlighted red if negative), the resulting risk level, and a budget
+    check flagging "over budget".
+  - **Approval Decision card** — shown only to a different user who holds approval rights
+    and only while the request is `submitted`, `under_review` or `on_hold`: Approve,
+    Reject, Hold, Resume (from hold), and *Approve with exception* whose reason is
+    mandatory (FR-005). Self-approval is never offered.
+  - **Approval History timeline** — every decision with approver, step, comment, exception
+    reason, and the financial snapshot (available / projected / risk) captured at the
+    moment of that decision.
 
 ### Approvals (002-approval-workflow)
 - **`/approvals`** — US4: queue shows only PRs assigned to the current step (each step is assigned

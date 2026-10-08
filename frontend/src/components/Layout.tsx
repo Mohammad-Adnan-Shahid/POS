@@ -35,7 +35,10 @@ export const NAV_SECTIONS: { section: string; items: NavItem[] }[] = [
   },
   {
     section: 'Governance',
-    items: [{ to: '/audit', label: 'Audit Log', permission: 'approval.view' }],
+    items: [
+      { to: '/audit', label: 'Audit Log', permission: 'approval.view' },
+      { to: '/roles', label: 'Roles & Assignments', permission: 'user.manage' },
+    ],
   },
 ]
 
